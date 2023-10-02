@@ -58,9 +58,9 @@ add_definitions(-DBOOST_DATE_TIME_POSIX_TIME_STD_CONFIG)
 include_directories(${catkin_INCLUDE_DIRS} ${libpointmatcher_INCLUDE_DIRS})
 
 add_executable(pointCloudToVtk src/pointCloudToVtk.cpp)
-target_link_libraries(pointCloudToVtk ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(pointCloudToVtk ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(vtkToPointCloud src/vtkToPointCloud.cpp)
-target_link_libraries(vtkToPointCloud ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(vtkToPointCloud ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 

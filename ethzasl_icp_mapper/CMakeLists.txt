@@ -23,6 +23,7 @@ libpointmatcher
 
 # This was tested for a system install of libpointmatcher
 find_package(libpointmatcher CONFIG)
+find_package(libnabo REQUIRED)
 
 add_service_files( FILES
 CorrectPose.srv
@@ -79,30 +80,30 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${libpointmatcher_INCLUDE_DIR
 
 add_executable(matcher_service src/matcher_service.cpp)
 add_dependencies(matcher_service ${PROJECT_NAME}_gencpp)
-target_link_libraries(matcher_service ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(matcher_service ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(occupancy_grid_builder src/occupancy_grid_builder.cpp)
 add_dependencies(occupancy_grid_builder ${PROJECT_NAME}_gencpp)
-target_link_libraries(occupancy_grid_builder ${catkin_LIBRARIES} ${EXTRA_LIBS} ${libpointmatcher_LIBRARIES})
+target_link_libraries(occupancy_grid_builder ${catkin_LIBRARIES} ${EXTRA_LIBS} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(mapper src/mapper.cpp)
 add_dependencies(mapper ${PROJECT_NAME}_gencpp)
-target_link_libraries(mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(map_maintainer src/map_maintainer.cpp )
 add_dependencies(map_maintainer ${PROJECT_NAME}_gencpp)
-target_link_libraries(map_maintainer ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(map_maintainer ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(interact_mapper src/interact_mapper.cpp )
 add_dependencies(interact_mapper ${PROJECT_NAME}_gencpp)
-target_link_libraries(interact_mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(interact_mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(dynamic_mapper src/dynamic_mapper.cpp )
 add_dependencies(dynamic_mapper ${PROJECT_NAME}_gencpp)
-target_link_libraries(dynamic_mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(dynamic_mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 add_executable(dynamic_trails src/dynamic_trails.cpp )
 add_dependencies(dynamic_trails ${PROJECT_NAME}_gencpp)
-target_link_libraries(dynamic_trails ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
+target_link_libraries(dynamic_trails ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} libnabo::nabo -fopenmp)
 
 
