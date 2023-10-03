@@ -1,3 +1,6 @@
+#ifndef LOCALIZER_H
+#define LOCALIZER_H
+
 #include <fstream>
 
 #include <boost/version.hpp>
@@ -52,9 +55,9 @@ class Localizer
 	ros::NodeHandle& n;
 	ros::NodeHandle& pn;
 	
-	// Subscribers
-	ros::Subscriber scanSub;
-	ros::Subscriber cloudSub;
+	// // Subscribers
+	// ros::Subscriber scanSub;
+	// ros::Subscriber cloudSub;
 	
 	// Publishers
 	ros::Publisher mapPub;
@@ -151,8 +154,8 @@ public:
 	~Localizer();
 	
 protected:
-	void gotScan(const sensor_msgs::LaserScan& scanMsgIn);
-	void gotCloud(const sensor_msgs::PointCloud2& cloudMsgIn);
+	// void gotScan(const sensor_msgs::LaserScan& scanMsgIn);
+	// void gotCloud(const sensor_msgs::PointCloud2& cloudMsgIn);
 	void processCloud(unique_ptr<DP> cloud, const std::string& scannerFrame, const ros::Time& stamp, uint32_t seq);
 	void processNewMapIfAvailable();
 	void setMap(DP* newPointCloud);
@@ -166,8 +169,8 @@ protected:
 	
 	// Services
 	bool getPointMap(map_msgs::GetPointMap::Request &req, map_msgs::GetPointMap::Response &res);
-	bool saveMap(map_msgs::SaveMap::Request &req, map_msgs::SaveMap::Response &res);
-	bool loadMap(ethzasl_icp_mapper::LoadMap::Request &req, ethzasl_icp_mapper::LoadMap::Response &res);
+	// bool saveMap(map_msgs::SaveMap::Request &req, map_msgs::SaveMap::Response &res);
+	// bool loadMap(ethzasl_icp_mapper::LoadMap::Request &req, ethzasl_icp_mapper::LoadMap::Response &res);
 	bool reset(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 	bool correctPose(ethzasl_icp_mapper::CorrectPose::Request &req, ethzasl_icp_mapper::CorrectPose::Response &res);
 	bool setMode(ethzasl_icp_mapper::SetMode::Request &req, ethzasl_icp_mapper::SetMode::Response &res);
@@ -175,3 +178,5 @@ protected:
 	bool getBoundedMap(ethzasl_icp_mapper::GetBoundedMap::Request &req, ethzasl_icp_mapper::GetBoundedMap::Response &res);
 	bool reloadallYaml(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 };
+
+#endif // LOCALIZER_H

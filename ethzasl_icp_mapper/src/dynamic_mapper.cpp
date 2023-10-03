@@ -231,7 +231,7 @@ Mapper::Mapper(ros::NodeHandle& n, ros::NodeHandle& pn):
 		PointMatcherSupport::setLogger(make_shared<PointMatcherSupport::ROSLogger>());
 
 	// Load all parameters stored in external files
-	loadExternalParameters();
+	loadExternalParameters();	// Initialize ICP, DataPointsFilters objects
 
 	PM::Parameters params;
 	params["dim"] = "-1";
@@ -395,7 +395,7 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 	}
 
 	// Ensure a minimum amount of point before filtering
-	int ptsCount = newPointCloud->getNbPoints();
+	int ptsCount = newPointCloud->getNbPoints();	// Return the number of points contained in the point cloud.
 	if(ptsCount < minReadingPointCount)
 	{
 		ROS_ERROR_STREAM("[ICP] Not enough points in newPointCloud: only " << ptsCount << " pts.");
@@ -1244,6 +1244,7 @@ void Mapper::loadExternalParameters()
 	
 	// load configs
 	string configFileName;
+	// Initializing ICP object from YAML file
 	if (ros::param::get("~icpConfig", configFileName))
 	{
 		ifstream ifs(configFileName.c_str());
@@ -1262,7 +1263,8 @@ void Mapper::loadExternalParameters()
 		ROS_INFO_STREAM("No ICP config file given, using default");
 		icp.setDefault();
 	}
-	
+
+	// Initializing DataPointsFilters Object from YAML file 
 	if (ros::param::get("~inputFiltersConfig", configFileName))
 	{
 		ifstream ifs(configFileName.c_str());

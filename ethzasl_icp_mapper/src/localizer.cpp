@@ -9,10 +9,10 @@ Localizer::Localizer(ros::NodeHandle& n, ros::NodeHandle& pn):
 	mapBuildingInProgress(false),
 	#endif // BOOST_VERSION >= 104100
 	processingNewCloud(false),
-	publishMapTf(getParam<bool>("publishMapTf", true)),
+	publishMapTf(getParam<bool>("publishMapTf", false)),
 	useConstMotionModel(getParam<bool>("useConstMotionModel", false)),
 	localizing(getParam<bool>("localizing", true)),
-	mapping(getParam<bool>("mapping", true)),
+	mapping(getParam<bool>("mapping", false)),
 	inverseTransform(getParam<bool>("inverseTransform", false)),
 	minReadingPointCount(getParam<int>("minReadingPointCount", 2000)),
 	minMapPointCount(getParam<int>("minMapPointCount", 500)),
@@ -63,11 +63,11 @@ Localizer::Localizer(ros::NodeHandle& n, ros::NodeHandle& pn):
 
 	radiusFilter = PM::get().DataPointsFilterRegistrar.create("MaxDistDataPointsFilter", params);
 
-	// topic initializations
-	if (getParam<bool>("subscribe_scan", true))
-		scanSub = n.subscribe("scan", inputQueueSize, &Localizer::gotScan, this);
-	if (getParam<bool>("subscribe_cloud", true))
-		cloudSub = n.subscribe("cloud_in", inputQueueSize, &Localizer::gotCloud, this);
+	// // topic initializations
+	// if (getParam<bool>("subscribe_scan", true))
+	// 	scanSub = n.subscribe("scan", inputQueueSize, &Localizer::gotScan, this);
+	// if (getParam<bool>("subscribe_cloud", true))
+	// 	cloudSub = n.subscribe("cloud_in", inputQueueSize, &Localizer::gotCloud, this);
 
 	mapPub = n.advertise<sensor_msgs::PointCloud2>("point_map", 2, true);
 	scanPub = n.advertise<sensor_msgs::PointCloud2>("corrected_scan", 2, true);
@@ -77,8 +77,8 @@ Localizer::Localizer(ros::NodeHandle& n, ros::NodeHandle& pn):
 	
 	// service initializations
 	getPointMapSrv = n.advertiseService("dynamic_point_map", &Localizer::getPointMap, this);
-	saveMapSrv = pn.advertiseService("save_map", &Localizer::saveMap, this);
-	loadMapSrv = pn.advertiseService("load_map", &Localizer::loadMap, this);
+	// saveMapSrv = pn.advertiseService("save_map", &Localizer::saveMap, this);
+	// loadMapSrv = pn.advertiseService("load_map", &Localizer::loadMap, this);
 	resetSrv = pn.advertiseService("reset", &Localizer::reset, this);
 	correctPoseSrv = pn.advertiseService("correct_pose", &Localizer::correctPose, this);
 	setModeSrv = pn.advertiseService("set_mode", &Localizer::setMode, this);
@@ -112,46 +112,46 @@ Localizer::~Localizer()
 	}
 }
 
-void Localizer::gotScan(const sensor_msgs::LaserScan& scanMsgIn)
-{
-	if(localizing)
-	{
-		const ros::Time endScanTime(scanMsgIn.header.stamp + ros::Duration(scanMsgIn.time_increment * (scanMsgIn.ranges.size() - 1)));
-		try
-		{
-			unique_ptr<DP> cloud(new DP(PointMatcher_ros::rosMsgToPointMatcherCloud<float>(scanMsgIn, &tfListener, scanMsgIn.header.frame_id))); //odomFrame
+// void Localizer::gotScan(const sensor_msgs::LaserScan& scanMsgIn)
+// {
+// 	if(localizing)
+// 	{
+// 		const ros::Time endScanTime(scanMsgIn.header.stamp + ros::Duration(scanMsgIn.time_increment * (scanMsgIn.ranges.size() - 1)));
+// 		try
+// 		{
+// 			unique_ptr<DP> cloud(new DP(PointMatcher_ros::rosMsgToPointMatcherCloud<float>(scanMsgIn, &tfListener, scanMsgIn.header.frame_id))); //odomFrame
 
-			processCloud(move(cloud), scanMsgIn.header.frame_id, endScanTime, scanMsgIn.header.seq);
-		}
-		catch(tf2::ConnectivityException)
-		{
-			ROS_ERROR_STREAM("Multiple tree... ignoring scan");
-		}
-		catch(tf2::TransformException &e)
-		{
-			ROS_ERROR_STREAM("Fix me..." << e.what() );
-		}
-	}
-}
+// 			processCloud(move(cloud), scanMsgIn.header.frame_id, endScanTime, scanMsgIn.header.seq);
+// 		}
+// 		catch(tf2::ConnectivityException)
+// 		{
+// 			ROS_ERROR_STREAM("Multiple tree... ignoring scan");
+// 		}
+// 		catch(tf2::TransformException &e)
+// 		{
+// 			ROS_ERROR_STREAM("Fix me..." << e.what() );
+// 		}
+// 	}
+// }
 
-void Localizer::gotCloud(const sensor_msgs::PointCloud2& cloudMsgIn)
-{
-	if(localizing)
-	{
-		unique_ptr<DP> cloud(new DP(PointMatcher_ros::rosMsgToPointMatcherCloud<float>(cloudMsgIn)));
+// void Localizer::gotCloud(const sensor_msgs::PointCloud2& cloudMsgIn)
+// {
+// 	if(localizing)
+// 	{
+// 		unique_ptr<DP> cloud(new DP(PointMatcher_ros::rosMsgToPointMatcherCloud<float>(cloudMsgIn)));
 		
 		
-		// TEST for UTIAS work on velodyne
-		// TODO: move that to a libpointmatcher filter
-		//const int maxNbPoints = 38000; // 70000 or 38000
-		//if(cloud->getNbPoints() >= maxNbPoints)
-		//{
-	//		cloud->features = cloud->features.leftCols(maxNbPoints); 
-	//		cloud->descriptors= cloud->descriptors.leftCols(maxNbPoints);
-		//}
-		processCloud(move(cloud), cloudMsgIn.header.frame_id, cloudMsgIn.header.stamp, cloudMsgIn.header.seq);
-	}
-}
+// 		// TEST for UTIAS work on velodyne
+// 		// TODO: move that to a libpointmatcher filter
+// 		//const int maxNbPoints = 38000; // 70000 or 38000
+// 		//if(cloud->getNbPoints() >= maxNbPoints)
+// 		//{
+// 	//		cloud->features = cloud->features.leftCols(maxNbPoints); 
+// 	//		cloud->descriptors= cloud->descriptors.leftCols(maxNbPoints);
+// 		//}
+// 		processCloud(move(cloud), cloudMsgIn.header.frame_id, cloudMsgIn.header.stamp, cloudMsgIn.header.seq);
+// 	}
+// }
 
 struct BoolSetter
 {
@@ -466,13 +466,13 @@ void Localizer::setMap(DP* newMapPointCloud)
 	
 	// Publish map point cloud
 	// FIXME this crash when used without descriptor
-	publishLock.lock();
-	if (mapPub.getNumSubscribers() && mapping)
-	{
-		ROS_INFO_STREAM("[MAP] publishing " << mapPointCloud->getNbPoints() << " points");
-		mapPub.publish(PointMatcher_ros::pointMatcherCloudToRosMsg<float>(*mapPointCloud, mapFrame, mapCreationTime));
-	}
-	publishLock.unlock();
+	// publishLock.lock();
+	// if (mapPub.getNumSubscribers() && mapping)
+	// {
+	// 	ROS_INFO_STREAM("[MAP] publishing " << mapPointCloud->getNbPoints() << " points");
+	// 	mapPub.publish(PointMatcher_ros::pointMatcherCloudToRosMsg<float>(*mapPointCloud, mapFrame, mapCreationTime));
+	// }
+	// publishLock.unlock();
 }
 
 void Localizer::updateIcpMap(const DP* newMapPointCloud)
@@ -863,59 +863,59 @@ bool Localizer::getPointMap(map_msgs::GetPointMap::Request &req, map_msgs::GetPo
 	return true;
 }
 
-bool Localizer::saveMap(map_msgs::SaveMap::Request &req, map_msgs::SaveMap::Response &res)
-{
-	if (!mapPointCloud)
-		return false;
+// bool Localizer::saveMap(map_msgs::SaveMap::Request &req, map_msgs::SaveMap::Response &res)
+// {
+// 	if (!mapPointCloud)
+// 		return false;
 	
-	try
-	{
-		mapPointCloud->save(req.filename.data);
-	}
-	catch (const std::runtime_error& e)
-	{
-		ROS_ERROR_STREAM("Unable to save: " << e.what());
-		return false;
-	}
+// 	try
+// 	{
+// 		mapPointCloud->save(req.filename.data);
+// 	}
+// 	catch (const std::runtime_error& e)
+// 	{
+// 		ROS_ERROR_STREAM("Unable to save: " << e.what());
+// 		return false;
+// 	}
 	
-	ROS_INFO_STREAM("[MAP] saved at " <<  req.filename.data << " with " << mapPointCloud->features.cols() << " points.");
-	return true;
-}
+// 	ROS_INFO_STREAM("[MAP] saved at " <<  req.filename.data << " with " << mapPointCloud->features.cols() << " points.");
+// 	return true;
+// }
 
-bool Localizer::loadMap(ethzasl_icp_mapper::LoadMap::Request &req, ethzasl_icp_mapper::LoadMap::Response &res)
-{
-	waitForMapBuildingCompleted();
+// bool Localizer::loadMap(ethzasl_icp_mapper::LoadMap::Request &req, ethzasl_icp_mapper::LoadMap::Response &res)
+// {
+// 	waitForMapBuildingCompleted();
 	
-	DP* cloud(new DP(DP::load(req.filename.data)));
+// 	DP* cloud(new DP(DP::load(req.filename.data)));
 
-	// Print new map information
-	const int dim = cloud->features.rows();
-	const int nbPts = cloud->features.cols();
-	ROS_INFO_STREAM("[MAP] Loading " << dim-1 << "D point cloud (" << req.filename.data << ") with " << nbPts << " points.");
+// 	// Print new map information
+// 	const int dim = cloud->features.rows();
+// 	const int nbPts = cloud->features.cols();
+// 	ROS_INFO_STREAM("[MAP] Loading " << dim-1 << "D point cloud (" << req.filename.data << ") with " << nbPts << " points.");
 
-	ROS_INFO_STREAM("  With descriptors:");
-	for(int i=0; i< cloud->descriptorLabels.size(); i++)
-	{
-		ROS_INFO_STREAM("    - " << cloud->descriptorLabels[i].text); 
-	}
+// 	ROS_INFO_STREAM("  With descriptors:");
+// 	for(int i=0; i< cloud->descriptorLabels.size(); i++)
+// 	{
+// 		ROS_INFO_STREAM("    - " << cloud->descriptorLabels[i].text); 
+// 	}
 
-	//reset transformation
-	publishLock.lock();
-	T_odom_to_map = PM::TransformationParameters::Identity(dim,dim);
-	T_localMap_to_map = PM::TransformationParameters::Identity(dim,dim);
-	T_odom_to_scanner = PM::TransformationParameters::Identity(dim,dim);
+// 	//reset transformation
+// 	publishLock.lock();
+// 	T_odom_to_map = PM::TransformationParameters::Identity(dim,dim);
+// 	T_localMap_to_map = PM::TransformationParameters::Identity(dim,dim);
+// 	T_odom_to_scanner = PM::TransformationParameters::Identity(dim,dim);
 	
-	//ISER
-	//T_odom_to_map(2,3) = mapElevation;
-	publishLock.unlock();
+// 	//ISER
+// 	//T_odom_to_map(2,3) = mapElevation;
+// 	publishLock.unlock();
 
-	//TODO: check that...
-	mapping = true;
-	setMap(updateMap(cloud, PM::TransformationParameters::Identity(dim,dim), false));
-	mapping = false;
+// 	//TODO: check that...
+// 	mapping = true;
+// 	setMap(updateMap(cloud, PM::TransformationParameters::Identity(dim,dim), false));
+// 	mapping = false;
 	
-	return true;
-}
+// 	return true;
+// }
 
 bool Localizer::reset(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
 {

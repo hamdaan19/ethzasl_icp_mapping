@@ -106,5 +106,8 @@ add_executable(dynamic_trails src/dynamic_trails.cpp )
 add_dependencies(dynamic_trails ${PROJECT_NAME}_gencpp)
 target_link_libraries(dynamic_trails ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} libnabo::nabo -fopenmp)
 
+# add_executable(localizer src/localizer.cpp )
+# add_dependencies(localizer ${PROJECT_NAME}_gencpp)
+# target_link_libraries(localizer ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} -fopenmp)
 
 
