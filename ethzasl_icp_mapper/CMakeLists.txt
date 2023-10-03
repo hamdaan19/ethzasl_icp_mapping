@@ -76,7 +76,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 add_definitions(-DHAVE_YAML_CPP)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${libpointmatcher_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${libpointmatcher_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include)
 
 add_executable(matcher_service src/matcher_service.cpp)
 add_dependencies(matcher_service ${PROJECT_NAME}_gencpp)
@@ -105,5 +105,6 @@ target_link_libraries(dynamic_mapper ${catkin_LIBRARIES} ${libpointmatcher_LIBRA
 add_executable(dynamic_trails src/dynamic_trails.cpp )
 add_dependencies(dynamic_trails ${PROJECT_NAME}_gencpp)
 target_link_libraries(dynamic_trails ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES} libnabo::nabo -fopenmp)
+
 
 
